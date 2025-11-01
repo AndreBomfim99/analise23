@@ -301,7 +301,7 @@ Contribuições são bem-vindas! Por favor:
 
 - GitHub: [@AndreBomfim99](https://github.com/AndreBomfim99)
 - LinkedIn: [André Bomfim](https://www.linkedin.com/in/andre-bomfim/)
-- Email: seu.email@example.com
+- Email: andre.bomfim99@gmail.com
 
 ---
 
