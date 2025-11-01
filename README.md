@@ -300,7 +300,7 @@ Contribuições são bem-vindas! Por favor:
 **André Bomfim**
 
 - GitHub: [@AndreBomfim99](https://github.com/AndreBomfim99)
-- LinkedIn: [Seu LinkedIn]
+- LinkedIn: [André Bomfim](https://www.linkedin.com/in/andre-bomfim/)
 - Email: seu.email@example.com
 
 ---
