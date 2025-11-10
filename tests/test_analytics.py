@@ -1,8 +1,6 @@
 """
 Tests: Analytics (RFM Segmentation)
-------------------------------------
 Testa o módulo de análise RFM de clientes.
-
 Autor: Andre Bomfim
 Data: Outubro 2025
 """
@@ -21,10 +19,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from python.analytics.rfm_segmentation import RFMAnalyzer
 
 
-# ============================================
-# TESTES DA CLASSE RFMAnalyzer
-# ============================================
 
+# TESTES DA CLASSE RFMAnalyzer
 class TestRFMAnalyzer:
     """Testes para RFMAnalyzer"""
     
@@ -405,10 +401,8 @@ class TestRFMAnalyzer:
         assert summary is not None
 
 
-# ============================================
-# TESTES DE MÉTRICAS RFM
-# ============================================
 
+# TESTES DE MÉTRICAS RFM
 class TestRFMMetrics:
     """Testes para cálculo de métricas RFM"""
     
@@ -506,9 +500,8 @@ class TestRFMMetrics:
         assert sum(weights.values()) == 1.0
 
 
-# ============================================
+
 # TESTES DE QUALIDADE DE DADOS RFM
-# ============================================
 
 class TestRFMDataQuality:
     """Testes de qualidade para dados RFM"""
@@ -637,10 +630,8 @@ class TestRFMDataQuality:
         assert suspicious == 0  # Nenhum valor acima de 100k neste exemplo
 
 
-# ============================================
-# TESTES DE SEGMENTAÇÃO
-# ============================================
 
+# TESTES DE SEGMENTAÇÃO
 class TestRFMSegmentation:
     """Testes específicos para segmentação"""
     
@@ -733,10 +724,8 @@ class TestRFMSegmentation:
         assert (df['segment'].str.len() > 0).all()
 
 
-# ============================================
-# TESTES DE ANÁLISE DE COHORT
-# ============================================
 
+# TESTES DE ANÁLISE DE COHORT
 class TestCohortAnalysis:
     """Testes para análise de cohort (conceitual, não implementado no RFMAnalyzer)"""
     
@@ -768,10 +757,8 @@ class TestCohortAnalysis:
         assert df.loc[0, 'lifetime_days'] == 151
 
 
-# ============================================
-# TESTES DE VISUALIZAÇÃO
-# ============================================
 
+# TESTES DE VISUALIZAÇÃO
 class TestRFMVisualization:
     """Testes para visualizações RFM"""
     
@@ -800,10 +787,8 @@ class TestRFMVisualization:
                 analyzer.plot_rfm_distribution(df, save_path=None)
 
 
-# ============================================
-# TESTES DE PERFORMANCE
-# ============================================
 
+# TESTES DE PERFORMANCE
 @pytest.mark.slow
 class TestRFMPerformance:
     """Testes de performance para RFM"""
@@ -840,10 +825,8 @@ class TestRFMPerformance:
         assert df['segment'].notna().all()
 
 
-# ============================================
-# TESTES DE INTEGRAÇÃO
-# ============================================
 
+# TESTES DE INTEGRAÇÃO
 class TestRFMIntegration:
     """Testes de integração para análise RFM"""
     
@@ -905,10 +888,8 @@ class TestRFMIntegration:
             pytest.skip(f"Teste de quantis falhou: {e}")
 
 
-# ============================================
-# TESTES DE EDGE CASES
-# ============================================
 
+# TESTES DE EDGE CASES
 class TestRFMEdgeCases:
     """Testes de casos extremos"""
     
@@ -986,10 +967,8 @@ class TestRFMEdgeCases:
         assert invalid == 1
 
 
-# ============================================
-# TESTES DE BUSINESS RULES
-# ============================================
 
+# TESTES DE BUSINESS RULES
 class TestBusinessRules:
     """Testes de regras de negócio"""
     
@@ -1052,10 +1031,8 @@ class TestBusinessRules:
             assert row['segment'] in high_risk_segments
 
 
-# ============================================
-# TESTES AUXILIARES
-# ============================================
 
+# TESTES AUXILIARES
 class TestRFMHelpers:
     """Testes para funções auxiliares"""
     
@@ -1084,10 +1061,8 @@ class TestRFMHelpers:
         assert p90 == 90.1
 
 
-# ============================================
-# TESTES DE REGRESSÃO
-# ============================================
 
+# TESTES DE REGRESSÃO
 class TestRFMRegression:
     """Testes de regressão para evitar bugs"""
     

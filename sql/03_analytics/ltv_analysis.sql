@@ -1,14 +1,10 @@
--- =====================================================
 -- CUSTOMER LIFETIME VALUE (LTV) ANALYSIS
--- =====================================================
 -- Análise completa de LTV por cliente, estado e segmento
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
+
 -- 1. LTV POR CLIENTE (Base)
--- =====================================================
 
 WITH customer_orders AS (
   SELECT 
@@ -83,10 +79,8 @@ customer_ltv AS (
 SELECT * FROM customer_ltv
 ORDER BY lifetime_value DESC;
 
--- =====================================================
--- 2. LTV POR ESTADO (Análise Geográfica)
--- =====================================================
 
+-- 2. LTV POR ESTADO (Análise Geográfica)
 WITH customer_ltv AS (
   SELECT 
     c.customer_unique_id,
@@ -179,10 +173,8 @@ SELECT
 FROM state_ranking
 ORDER BY avg_ltv DESC;
 
--- =====================================================
--- 3. LTV POR COHORT (Análise Temporal)
--- =====================================================
 
+-- 3. LTV POR COHORT (Análise Temporal)
 WITH customer_ltv AS (
   SELECT 
     c.customer_unique_id,
@@ -264,10 +256,8 @@ SELECT
 FROM cohort_analysis
 ORDER BY cohort_month;
 
--- =====================================================
--- 4. LTV POR SEGMENTO RFM (Preview)
--- =====================================================
 
+-- 4. LTV POR SEGMENTO RFM (Preview)
 WITH customer_ltv AS (
   SELECT 
     c.customer_unique_id,
@@ -324,9 +314,9 @@ SELECT
 FROM rfm_ltv
 ORDER BY avg_ltv DESC;
 
--- =====================================================
+
 -- 5. TOP 100 CLIENTES (Champions)
--- =====================================================
+
 
 WITH customer_ltv AS (
   SELECT 
@@ -374,20 +364,18 @@ SELECT
   
   -- Classificação
   CASE 
-    WHEN lifetime_value > 1000 THEN '🏆 VIP'
-    WHEN lifetime_value > 500 THEN '⭐ Premium'
-    WHEN lifetime_value > 200 THEN '✅ High Value'
-    ELSE '📊 Standard'
+    WHEN lifetime_value > 1000 THEN 'VIP'
+    WHEN lifetime_value > 500 THEN 'Premium'
+    WHEN lifetime_value > 200 THEN 'High Value'
+    ELSE 'Standard'
   END AS tier
 
 FROM customer_ltv
 ORDER BY lifetime_value DESC
 LIMIT 100;
 
--- =====================================================
--- 6. ANÁLISE DE PARETO (80/20)
--- =====================================================
 
+-- 6. ANÁLISE DE PARETO (80/20)
 WITH customer_ltv AS (
   SELECT 
     c.customer_unique_id,
@@ -441,10 +429,8 @@ FROM pareto_segments
 GROUP BY pareto_segment
 ORDER BY total_revenue DESC;
 
--- =====================================================
--- 7. LTV FORECAST (Projeção Simples)
--- =====================================================
 
+-- 7. LTV FORECAST (Projeção Simples)
 WITH customer_ltv AS (
   SELECT 
     c.customer_unique_id,
@@ -478,7 +464,7 @@ customer_metrics AS (
     SAFE_DIVIDE(lifetime_value, NULLIF(customer_lifetime_days, 0)) * 365 AS projected_annual_ltv
 
   FROM customer_ltv
-  WHERE customer_lifetime_days > 30  -- Apenas clientes com histórico
+  WHERE customer_lifetime_days > 30  -- apenas clientes c/ histórico
 )
 
 SELECT 
@@ -494,21 +480,3 @@ SELECT
 
 FROM customer_metrics;
 
--- =====================================================
--- INSIGHTS E OBSERVAÇÕES:
--- =====================================================
--- 
--- 1. LTV Médio esperado: R$ 150-200
--- 2. Estados com maior LTV tendem a ser Sul/Sudeste
--- 3. Taxa de recompra crítica: normalmente < 10%
--- 4. Top 20% clientes geram ~70-80% da receita (Pareto)
--- 5. Cohorts mais antigas têm LTV 30-50% maior
--- 6. Clientes "Loyal" (3+ pedidos) têm LTV 5x maior que "One-time"
--- 
--- AÇÕES RECOMENDADAS:
--- - Focar retenção nos primeiros 30 dias
--- - Programa VIP para top 10% (LTV > R$ 400)
--- - Campanhas regionalizadas (SP vs Sul)
--- - Win-back para clientes inativos há 90+ dias
--- 
--- =====================================================

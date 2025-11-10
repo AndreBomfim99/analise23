@@ -1,15 +1,10 @@
--- =====================================================
 -- PAYMENT ANALYSIS
--- =====================================================
 -- Análise completa de métodos de pagamento e comportamento
 -- Conversão, parcelamento, LTV por método, fraud patterns
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
 -- 1. OVERVIEW DE MÉTODOS DE PAGAMENTO
--- =====================================================
 
 WITH payment_overview AS (
   SELECT 
@@ -67,17 +62,17 @@ SELECT
   
   -- Classificação
   CASE 
-    WHEN conversion_rate_pct >= 95 AND avg_review_score >= 4.0 THEN '🟢 Excelente'
-    WHEN conversion_rate_pct >= 90 THEN '🟡 Bom'
-    ELSE '🔴 Atenção'
+    WHEN conversion_rate_pct >= 95 AND avg_review_score >= 4.0 THEN 'Excelente'
+    WHEN conversion_rate_pct >= 90 THEN 'Bom'
+    ELSE 'Atenção'
   END AS payment_health_status
 
 FROM payment_overview
 ORDER BY total_revenue DESC;
 
--- =====================================================
+
 -- 2. ANÁLISE DE PARCELAMENTO (Credit Card)
--- =====================================================
+
 
 WITH installment_analysis AS (
   SELECT 
@@ -141,9 +136,9 @@ SELECT
 FROM installment_analysis
 ORDER BY payment_installments;
 
--- =====================================================
+
 -- 3. LTV POR MÉTODO DE PAGAMENTO
--- =====================================================
+
 
 WITH payment_ltv AS (
   SELECT 
@@ -214,9 +209,8 @@ SELECT
 FROM payment_ltv_agg
 ORDER BY avg_ltv DESC;
 
--- =====================================================
+
 -- 4. MÚLTIPLOS MÉTODOS DE PAGAMENTO (Split Payment)
--- =====================================================
 
 WITH order_payment_count AS (
   SELECT 
@@ -244,9 +238,8 @@ GROUP BY payment_methods_count, payment_combination
 ORDER BY orders DESC
 LIMIT 20;
 
--- =====================================================
+
 -- 5. ANÁLISE TEMPORAL (Evolução de Métodos)
--- =====================================================
 
 WITH monthly_payments AS (
   SELECT 
@@ -283,10 +276,8 @@ SELECT
 FROM monthly_payments
 ORDER BY year_month DESC, orders DESC;
 
--- =====================================================
--- 6. ANÁLISE POR ESTADO (Preferência Regional)
--- =====================================================
 
+-- 6. ANÁLISE POR ESTADO (Preferência Regional)
 WITH state_payment_preference AS (
   SELECT 
     c.customer_state,
@@ -329,9 +320,9 @@ FROM ranked_preferences
 WHERE payment_rank = 1  -- Método preferido por estado
 ORDER BY orders DESC;
 
--- =====================================================
+
 -- 7. FRAUDE E RISCO (Patterns Suspeitos)
--- =====================================================
+
 
 WITH fraud_patterns AS (
   SELECT 
@@ -383,10 +374,8 @@ ORDER BY
     ELSE 3
   END;
 
--- =====================================================
--- 8. ANÁLISE DE TICKET MÉDIO POR MÉTODO
--- =====================================================
 
+-- 8. ANÁLISE DE TICKET MÉDIO POR MÉTODO
 WITH ticket_distribution AS (
   SELECT 
     p.payment_type,
@@ -431,10 +420,8 @@ ORDER BY payment_type,
     ELSE 6
   END;
 
--- =====================================================
--- 9. RECOMENDAÇÕES POR SEGMENTO DE CLIENTE
--- =====================================================
 
+-- 9. RECOMENDAÇÕES POR SEGMENTO DE CLIENTE
 SELECT 
   cm.frequency_segment,
   cm.ltv_segment,
@@ -451,11 +438,11 @@ SELECT
   
   -- Recommended strategy
   CASE 
-    WHEN cm.ltv_segment = 'VIP' THEN '💳 Oferecer limite de crédito diferenciado'
-    WHEN cm.frequency_segment = 'Champion' THEN '🎁 Programa cashback exclusivo'
-    WHEN cm.ltv_segment = 'High Value' THEN '📊 Parcelamento sem juros até 12x'
-    WHEN cm.frequency_segment = 'One-time' THEN '💰 Desconto para trocar boleto→cartão'
-    ELSE '📧 Educar sobre benefícios de parcelamento'
+    WHEN cm.ltv_segment = 'VIP' THEN 'Oferecer limite de crédito diferenciado'
+    WHEN cm.frequency_segment = 'Champion' THEN 'Programa cashback exclusivo'
+    WHEN cm.ltv_segment = 'High Value' THEN 'Parcelamento sem juros até 12x'
+    WHEN cm.frequency_segment = 'One-time' THEN 'Desconto para trocar boleto→cartão'
+    ELSE 'Educar sobre benefícios de parcelamento'
   END AS recommended_strategy
 
 FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics` cm
@@ -469,35 +456,3 @@ WHERE o.order_status = 'delivered'
 GROUP BY cm.frequency_segment, cm.ltv_segment
 ORDER BY avg_ltv DESC;
 
--- =====================================================
--- INSIGHTS E RECOMENDAÇÕES:
--- =====================================================
---
--- 1. CARTÃO DE CRÉDITO DOMINA (76%):
---    - Maior LTV (+46% vs boleto)
---    - Maior taxa de conversão (97% vs 87%)
---    - Clientes mais fiéis (repeat rate +35%)
---
--- 2. BOLETO TEM MENOR PERFORMANCE:
---    - Ticket médio 46% menor
---    - LTV 46% menor
---    - Considerar incentivo para migração (5-10% desconto)
---
--- 3. PARCELAMENTO É CHAVE:
---    - 6x sem juros = sweet spot (35% das compras)
---    - 10-12x parcelas = tickets 3x maiores
---    - Expandir parcelamento para mais categorias
---
--- 4. REGIONAL INSIGHTS:
---    - Norte/Nordeste: maior uso de boleto (28% vs 19% nacional)
---    - Sul: maior parcelamento médio (7.2x vs 6.1x)
---    - Adaptar ofertas por região
---
--- 5. AÇÕES RECOMENDADAS:
---    - Cashback 2% para cartão de crédito
---    - Desconto 5% para migrar boleto→cartão
---    - Parcelamento até 12x sem juros para VIPs
---    - Split payment (cartão + voucher) para tickets altos
---    - Sistema de detecção de fraude para pedidos >R$1000
---
--- =====================================================

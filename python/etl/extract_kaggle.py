@@ -233,7 +233,6 @@ class KaggleExtractor:
         try:
             import kaggle
             
-            # Buscar metadata do dataset
             datasets = kaggle.api.dataset_list(search=self.dataset_name)
             
             if datasets:
@@ -271,7 +270,7 @@ class KaggleExtractor:
         logger.info("\nValidando arquivos baixados...")
         
         expected_files = {
-            'olist_customers_dataset.csv': 99441,  # Linhas esperadas (aproximado)
+            'olist_customers_dataset.csv': 99441,  
             'olist_orders_dataset.csv': 99441,
             'olist_order_items_dataset.csv': 112650,
             'olist_products_dataset.csv': 32951,

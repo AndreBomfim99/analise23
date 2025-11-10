@@ -1,8 +1,6 @@
 """
 Tests: ETL Pipeline
--------------------
 Testa o pipeline de ETL para carregar dados no BigQuery.
-
 Autor: Andre Bomfim
 Data: Outubro 2025
 """
@@ -21,10 +19,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from python.etl.load_to_bigquery import OlistBigQueryETL
 
 
-# ============================================
-# TESTES DA CLASSE OlistBigQueryETL
-# ============================================
 
+# TESTES DA CLASSE OlistBigQueryETL
 class TestOlistBigQueryETL:
     """Testes para OlistBigQueryETL"""
     
@@ -364,10 +360,8 @@ class TestOlistBigQueryETL:
         assert etl.client.load_table_from_dataframe.call_count == 3
 
 
-# ============================================
-# TESTES DE TRANSFORMAÇÕES DE DADOS
-# ============================================
 
+# TESTES DE TRANSFORMAÇÕES DE DADOS
 class TestETLDataTransformations:
     """Testes para transformações de dados no ETL"""
     
@@ -448,10 +442,8 @@ class TestETLDataTransformations:
         assert df['optional_field'].isnull().sum() == 1
 
 
-# ============================================
-# TESTES DE SCHEMAS
-# ============================================
 
+# TESTES DE SCHEMAS
 class TestETLSchemaDefinitions:
     """Testes para definições de schema"""
     
@@ -547,10 +539,8 @@ class TestETLSchemaDefinitions:
             assert field in items_fields, f"Campo {field} faltando em order_items"
 
 
-# ============================================
-# TESTES DE VALIDAÇÃO DE DADOS
-# ============================================
 
+# TESTES DE VALIDAÇÃO DE DADOS
 class TestETLDataValidation:
     """Testes de validação de dados durante ETL"""
     
@@ -604,10 +594,8 @@ class TestETLDataValidation:
         assert (df['freight'] >= 0).all()
 
 
-# ============================================
-# TESTES DE PERFORMANCE
-# ============================================
 
+# TESTES DE PERFORMANCE
 @pytest.mark.slow
 class TestETLPerformance:
     """Testes de performance do ETL"""
@@ -654,10 +642,8 @@ class TestETLPerformance:
         assert elapsed < 1.0, f"Upload muito lento: {elapsed:.2f}s"
 
 
-# ============================================
-# TESTES DE INTEGRAÇÃO
-# ============================================
 
+# TESTES DE INTEGRAÇÃO
 class TestETLIntegration:
     """Testes de integração para ETL"""
     
@@ -710,10 +696,8 @@ class TestETLIntegration:
             pytest.skip(f"Teste de criação de dataset falhou: {e}")
 
 
-# ============================================
-# TESTES DE EDGE CASES
-# ============================================
 
+# TESTES DE EDGE CASES
 class TestETLEdgeCases:
     """Testes de casos extremos"""
     
@@ -833,10 +817,8 @@ class TestETLEdgeCases:
         assert np.isfinite(df.loc[0, 'value'])
 
 
-# ============================================
-# TESTES DE LOGGING
-# ============================================
 
+# TESTES DE LOGGING
 class TestETLLogging:
     """Testes de logging do ETL"""
     
@@ -858,10 +840,8 @@ class TestETLLogging:
             assert mock_logger.info.called or True  # Loguru pode não usar .info diretamente
 
 
-# ============================================
-# TESTES DE ERRO E RECUPERAÇÃO
-# ============================================
 
+# TESTES DE ERRO E RECUPERAÇÃO
 class TestETLErrorHandling:
     """Testes de tratamento de erros"""
     
@@ -913,10 +893,8 @@ class TestETLErrorHandling:
         assert mock_job.done.call_count > 0
 
 
-# ============================================
-# TESTES DE CONFIGURAÇÃO
-# ============================================
 
+# TESTES DE CONFIGURAÇÃO
 class TestETLConfiguration:
     """Testes de configuração do ETL"""
     
@@ -945,10 +923,8 @@ class TestETLConfiguration:
             assert etl.data_path == custom_path
 
 
-# ============================================
-# TESTES DE QUALIDADE DE CÓDIGO
-# ============================================
 
+# TESTES DE QUALIDADE DE CÓDIGO
 class TestETLCodeQuality:
     """Testes de qualidade de código"""
     
@@ -972,10 +948,8 @@ class TestETLCodeQuality:
             assert table_name in etl.schemas, f"Schema faltando para {table_name}"
 
 
-# ============================================
-# TESTES DE REGRESSÃO
-# ============================================
 
+# TESTES DE REGRESSÃO
 class TestETLRegression:
     """Testes de regressão para evitar bugs"""
     
@@ -1006,10 +980,8 @@ class TestETLRegression:
         assert 'order_purchase_timestamp' in orders_fields
 
 
-# ============================================
-# TESTES DE COMPATIBILIDADE
-# ============================================
 
+# TESTES DE COMPATIBILIDADE
 class TestETLCompatibility:
     """Testes de compatibilidade"""
     
@@ -1032,10 +1004,8 @@ class TestETLCompatibility:
         assert hasattr(bigquery, 'LoadJobConfig')
 
 
-# ============================================
-# TESTES AUXILIARES
-# ============================================
 
+# TESTES AUXILIARES
 class TestETLHelpers:
     """Testes para funções auxiliares"""
     
@@ -1067,10 +1037,8 @@ class TestETLHelpers:
         assert text2.replace("_", "-") == "customer-id"
 
 
-# ============================================
-# TESTES DE DOCUMENTAÇÃO
-# ============================================
 
+# TESTES DE DOCUMENTAÇÃO
 class TestETLDocumentation:
     """Testes relacionados à documentação"""
     
@@ -1094,10 +1062,8 @@ class TestETLDocumentation:
             assert method.__doc__ is not None, f"{method_name} sem docstring"
 
 
-# ============================================
-# TESTES DE COBERTURA ADICIONAL
-# ============================================
 
+# TESTES DE COBERTURA ADICIONAL
 class TestAdditionalCoverage:
     """Testes adicionais para aumentar cobertura"""
     

@@ -1,16 +1,11 @@
--- =====================================================
 -- STAGING: CUSTOMERS
--- =====================================================
+
 -- Camada de staging para clientes com limpeza e enriquecimento
 -- Estilo dbt - fonte → staging → marts
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
 -- STG_CUSTOMERS: Clientes limpos e enriquecidos
--- =====================================================
-
 CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers` AS
 
 WITH source AS (
@@ -40,9 +35,7 @@ enriched AS (
   SELECT 
     *,
     
-    -- ==========================================
     -- ENRICHMENT: Categorização geográfica
-    -- ==========================================
     
     -- Região do Brasil
     CASE 
@@ -81,9 +74,8 @@ enriched AS (
       ELSE 'Other'
     END AS customer_metro_area,
     
-    -- ==========================================
+    
     -- ENRICHMENT: Flags e categorias
-    -- ==========================================
     
     -- Estado econômico (PIB per capita aproximado)
     CASE 
@@ -118,10 +110,8 @@ enriched AS (
   FROM cleaned
 ),
 
--- ==========================================
--- CUSTOMER DEDUPLICATION (customer_unique_id)
--- ==========================================
 
+-- CUSTOMER DEDUPLICATION (customer_unique_id)
 customer_master AS (
   SELECT 
     customer_unique_id,
@@ -163,10 +153,8 @@ FROM enriched e
 LEFT JOIN customer_master cm 
   ON e.customer_unique_id = cm.customer_unique_id;
 
--- =====================================================
--- VIEW: Customer Master (1 linha por customer_unique_id)
--- =====================================================
 
+-- VIEW: Customer Master (1 linha por customer_unique_id)
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers_master` AS
 SELECT 
   customer_unique_id,
@@ -203,69 +191,8 @@ FROM (
   GROUP BY customer_unique_id
 );
 
--- =====================================================
--- TESTES DE QUALIDADE (Documentação)
--- =====================================================
 
-/*
--- Teste 1: Nenhum customer_id deve ser nulo
-SELECT COUNT(*) AS null_customer_ids
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-WHERE customer_id IS NULL;
--- Esperado: 0
-
--- Teste 2: Nenhum customer_id deve estar duplicado
-SELECT 
-  customer_id, 
-  COUNT(*) AS count
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-GROUP BY customer_id
-HAVING COUNT(*) > 1;
--- Esperado: 0 linhas
-
--- Teste 3: customer_state deve ter 2 caracteres
-SELECT COUNT(*) AS invalid_states
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-WHERE LENGTH(customer_state) != 2;
--- Esperado: 0
-
--- Teste 4: customer_state deve ser válido
-SELECT DISTINCT customer_state
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-ORDER BY customer_state;
--- Esperado: 27 estados (26 UFs + DF)
-
--- Teste 5: Clientes com múltiplos IDs
-SELECT 
-  has_multiple_ids,
-  COUNT(DISTINCT customer_unique_id) AS unique_customers,
-  COUNT(*) AS total_customer_ids
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-GROUP BY has_multiple_ids;
--- Esperado: ~3% têm múltiplos IDs
-
--- Teste 6: Distribuição por região
-SELECT 
-  customer_region,
-  COUNT(*) AS customers,
-  ROUND(COUNT(*) / SUM(COUNT(*)) OVER () * 100, 2) AS pct
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-GROUP BY customer_region
-ORDER BY customers DESC;
--- Esperado: Sudeste ~70%, Sul ~15%, Nordeste ~10%
-
--- Teste 7: CEPs válidos
-SELECT 
-  is_valid_zipcode,
-  COUNT(*) AS count
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-GROUP BY is_valid_zipcode;
--- Esperado: >99% válidos
-*/
-
--- =====================================================
 -- QUERIES DE VALIDAÇÃO
--- =====================================================
 
 -- Sumário da tabela staging
 SELECT 
@@ -308,55 +235,3 @@ SELECT
   COUNTIF(customer_region = 'Sudeste')
 FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`;
 
--- =====================================================
--- EXEMPLO DE USO
--- =====================================================
-
-/*
--- Análise de concentração geográfica
-SELECT 
-  customer_region,
-  customer_state,
-  COUNT(DISTINCT customer_unique_id) AS unique_customers
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-GROUP BY customer_region, customer_state
-ORDER BY unique_customers DESC;
-
--- Análise de áreas metropolitanas
-SELECT 
-  customer_metro_area,
-  COUNT(DISTINCT customer_unique_id) AS customers
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-WHERE customer_metro_area != 'Other'
-GROUP BY customer_metro_area
-ORDER BY customers DESC;
-
--- Clientes com múltiplos IDs (para investigação)
-SELECT *
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_customers`
-WHERE has_multiple_ids = TRUE
-ORDER BY customer_unique_id
-LIMIT 100;
-*/
-
--- =====================================================
--- DOCUMENTAÇÃO
--- =====================================================
-
--- Esta tabela staging serve como base para:
--- 1. Análises geográficas (região, estado, metro areas)
--- 2. Análises de segmentação de clientes
--- 3. Junção com orders para análises de comportamento
--- 4. Customer 360 views
--- 5. Análises de LTV por geografia
-
--- Diferença entre stg_customers e stg_customers_master:
--- - stg_customers: 1 linha por customer_id (~99k linhas)
--- - stg_customers_master: 1 linha por customer_unique_id (~96k linhas)
--- Use customer_master para análises de cliente único (LTV, cohort, etc)
-
--- Próximos passos:
--- - Criar stg_order_items.sql
--- - Criar mart_customer_metrics.sql (combinando customers + orders)
-
--- =====================================================

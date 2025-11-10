@@ -1,15 +1,9 @@
--- =====================================================
 -- STAGING: ORDER ITEMS
--- =====================================================
 -- Camada de staging para itens de pedidos com enriquecimento
 -- Estilo dbt - fonte → staging → marts
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
-
--- =====================================================
 -- STG_ORDER_ITEMS: Itens limpos e enriquecidos
--- =====================================================
 
 CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items` AS
 
@@ -59,10 +53,8 @@ enriched_product AS (
   SELECT 
     c.*,
     
-    -- ==========================================
     -- PRODUCT ENRICHMENT
-    -- ==========================================
-    
+  
     -- Product details
     p.product_category_name,
     pct.product_category_name_english AS category_english,
@@ -95,9 +87,7 @@ enriched_seller AS (
   SELECT 
     ep.*,
     
-    -- ==========================================
     -- SELLER ENRICHMENT
-    -- ==========================================
     
     -- Seller location
     s.seller_city,
@@ -122,10 +112,8 @@ enriched_order AS (
   SELECT 
     es.*,
     
-    -- ==========================================
     -- ORDER ENRICHMENT
-    -- ==========================================
-    
+
     -- Order info
     o.customer_id,
     o.order_status,
@@ -150,9 +138,8 @@ enriched_order AS (
 
 final AS (
   SELECT 
-    -- ==========================================
+    
     -- IDENTIFIERS
-    -- ==========================================
     
     order_id,
     order_item_id,
@@ -160,9 +147,7 @@ final AS (
     seller_id,
     customer_id,
     
-    -- ==========================================
     -- ORDER CONTEXT
-    -- ==========================================
     
     order_status,
     order_purchase_timestamp,
@@ -173,9 +158,7 @@ final AS (
     seasonal_period,
     shipping_limit_date,
     
-    -- ==========================================
     -- FINANCIAL METRICS
-    -- ==========================================
     
     ROUND(price, 2) AS price,
     ROUND(freight_value, 2) AS freight_value,
@@ -193,9 +176,9 @@ final AS (
       ELSE 'Very Low (<50)'
     END AS price_tier,
     
-    -- ==========================================
+    
     -- PRODUCT ATTRIBUTES
-    -- ==========================================
+    
     
     product_category_name,
     category_english,
@@ -213,25 +196,25 @@ final AS (
       ELSE 'Very Light (<500g)'
     END AS weight_tier,
     
-    -- ==========================================
+    
     -- SELLER ATTRIBUTES
-    -- ==========================================
+    
     
     seller_city,
     seller_state,
     seller_region,
     
-    -- ==========================================
+    
     -- CUSTOMER ATTRIBUTES
-    -- ==========================================
+    
     
     customer_city,
     customer_state,
     customer_region,
     
-    -- ==========================================
+    
     -- LOGISTICS METRICS
-    -- ==========================================
+    
     
     -- Same state shipping
     CASE 
@@ -255,9 +238,9 @@ final AS (
       ELSE 'Short Distance'
     END AS shipping_distance_category,
     
-    -- ==========================================
+    
     -- MARGIN ESTIMATION (Simplificada)
-    -- ==========================================
+    
     
     -- Margem bruta estimada (preço - frete)
     ROUND(price - freight_value, 2) AS estimated_gross_margin,
@@ -274,9 +257,9 @@ final AS (
       ELSE 'Very Low Margin (<20%)'
     END AS margin_tier,
     
-    -- ==========================================
+    
     -- FLAGS
-    -- ==========================================
+    
     
     is_valid_financial,
     
@@ -295,9 +278,9 @@ final AS (
     -- Missing product info
     CASE WHEN product_category_name IS NULL THEN TRUE ELSE FALSE END AS is_missing_category,
     
-    -- ==========================================
+    
     -- METADATA
-    -- ==========================================
+    
     
     _loaded_at
     
@@ -306,9 +289,8 @@ final AS (
 
 SELECT * FROM final;
 
--- =====================================================
+
 -- ÍNDICES E PARTICIONAMENTO
--- =====================================================
 
 -- Recriar com particionamento e clustering
 CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
@@ -317,49 +299,9 @@ CLUSTER BY category_english, seller_state, customer_state, price_tier
 AS
 SELECT * FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`;
 
--- =====================================================
--- TESTES DE QUALIDADE
--- =====================================================
 
-/*
--- Teste 1: Nenhum order_id ou product_id nulo
-SELECT COUNT(*) 
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
-WHERE order_id IS NULL OR product_id IS NULL;
--- Esperado: 0
-
--- Teste 2: Prices e freight devem ser não-negativos
-SELECT COUNT(*) 
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
-WHERE price < 0 OR freight_value < 0;
--- Esperado: 0
-
--- Teste 3: Combinação order_id + order_item_id deve ser única
-SELECT 
-  order_id, 
-  order_item_id, 
-  COUNT(*) AS count
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
-GROUP BY order_id, order_item_id
-HAVING COUNT(*) > 1;
--- Esperado: 0 linhas
-
--- Teste 4: Freight não deve exceder price (exceto casos raros)
-SELECT COUNT(*) 
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
-WHERE freight_exceeds_price = TRUE;
--- Esperado: < 1% do total
-
--- Teste 5: Produtos devem ter categoria
-SELECT COUNT(*) 
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
-WHERE is_missing_category = TRUE;
--- Esperado: < 1% do total
-*/
-
--- =====================================================
 -- QUERIES DE VALIDAÇÃO
--- =====================================================
+
 
 -- Sumário da tabela
 SELECT 
@@ -395,68 +337,4 @@ SELECT
   ROUND(COUNTIF(margin_tier LIKE 'High%') / COUNT(*) * 100, 2)
 FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`;
 
--- =====================================================
--- EXEMPLO DE USO
--- =====================================================
 
-/*
--- Análise de margem por categoria
-SELECT 
-  category_english,
-  COUNT(*) AS items,
-  ROUND(AVG(price), 2) AS avg_price,
-  ROUND(AVG(freight_value), 2) AS avg_freight,
-  ROUND(AVG(estimated_margin_pct), 2) AS avg_margin_pct
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
-WHERE order_status = 'delivered'
-GROUP BY category_english
-ORDER BY items DESC
-LIMIT 20;
-
--- Análise de logística (distância vs freight)
-SELECT 
-  shipping_distance_category,
-  COUNT(*) AS shipments,
-  ROUND(AVG(freight_value), 2) AS avg_freight,
-  ROUND(AVG(product_weight_g), 2) AS avg_weight_g
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
-GROUP BY shipping_distance_category
-ORDER BY avg_freight DESC;
-
--- Top sellers por receita
-SELECT 
-  seller_id,
-  seller_state,
-  COUNT(DISTINCT order_id) AS orders,
-  ROUND(SUM(price), 2) AS total_revenue
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_order_items`
-WHERE order_status = 'delivered'
-GROUP BY seller_id, seller_state
-ORDER BY total_revenue DESC
-LIMIT 50;
-*/
-
--- =====================================================
--- DOCUMENTAÇÃO
--- =====================================================
-
--- Esta tabela staging serve como base para:
--- 1. Análises de categoria de produto
--- 2. Análises de margem e pricing
--- 3. Análises de logística e frete
--- 4. Performance de sellers
--- 5. Análises de cross-sell e basket
-
--- Grão: 1 linha por item de pedido (order_id + order_item_id)
--- Relacionamentos:
--- - N:1 com stg_orders (order_id)
--- - N:1 com products (product_id)
--- - N:1 com sellers (seller_id)
--- - N:1 com stg_customers (customer_id via orders)
-
--- Próximos passos:
--- - Criar mart_product_performance.sql
--- - Criar mart_seller_metrics.sql
--- - Usar em análises de basket (itens comprados juntos)
-
--- =====================================================

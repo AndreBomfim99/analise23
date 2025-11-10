@@ -1,8 +1,6 @@
 """
 Tests: Data Quality Validation
--------------------------------
 Testa o módulo de validação de qualidade de dados.
-
 Autor: Andre Bomfim
 Data: Outubro 2025
 """
@@ -20,11 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from python.etl.data_validation import DataValidator
 
-
-# ============================================
 # TESTES DA CLASSE DataValidator
-# ============================================
-
 class TestDataValidator:
     """Testes para DataValidator"""
     
@@ -281,10 +275,8 @@ class TestDataValidator:
         assert 0 < success_rate < 1
 
 
-# ============================================
-# TESTES DE REGRAS DE QUALIDADE
-# ============================================
 
+# TESTES DE REGRAS DE QUALIDADE
 class TestDataQualityRules:
     """Testes de regras de qualidade específicas"""
     
@@ -530,10 +522,8 @@ class TestDataQualityRules:
         assert invalid_numeric == 1  # 'ABCDE'
 
 
-# ============================================
-# TESTES DE INTEGRIDADE REFERENCIAL
-# ============================================
 
+# TESTES DE INTEGRIDADE REFERENCIAL
 class TestReferentialIntegrity:
     """Testes de integridade referencial entre tabelas"""
     
@@ -609,10 +599,8 @@ class TestReferentialIntegrity:
         assert orphans.iloc[0]['order_id'] == 'o3'
 
 
-# ============================================
-# TESTES DE QUALIDADE DE DADOS TEMPORAIS
-# ============================================
 
+# TESTES DE QUALIDADE DE DADOS TEMPORAIS
 class TestTemporalDataQuality:
     """Testes de qualidade para dados temporais"""
     
@@ -686,10 +674,8 @@ class TestTemporalDataQuality:
         assert unreasonable == 1
 
 
-# ============================================
-# TESTES DE INTEGRAÇÃO
-# ============================================
 
+# TESTES DE INTEGRAÇÃO
 class TestDataValidationIntegration:
     """Testes de integração para validação de dados"""
     
@@ -742,10 +728,8 @@ class TestDataValidationIntegration:
             pytest.skip(f"Validação específica falhou: {e}")
 
 
-# ============================================
-# TESTES DE PERFORMANCE
-# ============================================
 
+# TESTES DE PERFORMANCE
 @pytest.mark.slow
 class TestDataValidationPerformance:
     """Testes de performance para validação"""
@@ -777,10 +761,8 @@ class TestDataValidationPerformance:
         assert len(validator.validation_results) == 100
 
 
-# ============================================
-# TESTES DE EDGE CASES
-# ============================================
 
+# TESTES DE EDGE CASES
 class TestDataValidationEdgeCases:
     """Testes de casos extremos"""
     
@@ -908,10 +890,8 @@ class TestDataValidationEdgeCases:
         assert outliers > 0
 
 
-# ============================================
-# TESTES DE RELATÓRIOS
-# ============================================
 
+# TESTES DE RELATÓRIOS
 class TestDataValidationReporting:
     """Testes para geração de relatórios"""
     
@@ -978,10 +958,8 @@ class TestDataValidationReporting:
         assert success_rate == 60.0
 
 
-# ============================================
-# TESTES AUXILIARES
-# ============================================
 
+# TESTES AUXILIARES
 class TestValidationHelpers:
     """Testes para funções auxiliares"""
     
@@ -1007,10 +985,8 @@ class TestValidationHelpers:
         assert diff_days == 9
 
 
-# ============================================
-# TESTES DE COBERTURA ADICIONAL
-# ============================================
 
+# TESTES DE COBERTURA ADICIONAL
 class TestAdditionalCoverage:
     """Testes adicionais para aumentar cobertura"""
     

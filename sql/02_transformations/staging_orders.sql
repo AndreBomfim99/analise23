@@ -1,15 +1,10 @@
--- =====================================================
+
 -- STAGING: ORDERS
--- =====================================================
 -- Camada de staging para pedidos com limpeza e enriquecimento
 -- Estilo dbt - fonte → staging → marts
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
-
--- =====================================================
 -- STG_ORDERS: Pedidos limpos e enriquecidos
--- =====================================================
 
 CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders` AS
 
@@ -55,10 +50,9 @@ enriched AS (
   SELECT 
     *,
     
-    -- ==========================================
-    -- ENRICHMENT: Datas calculadas
-    -- ==========================================
     
+    -- ENRICHMENT: Datas calculadas
+  
     -- Data extrações
     DATE(order_purchase_timestamp) AS order_date,
     EXTRACT(YEAR FROM order_purchase_timestamp) AS order_year,
@@ -84,9 +78,8 @@ enriched AS (
       ELSE FALSE
     END AS is_weekend,
     
-    -- ==========================================
+    
     -- ENRICHMENT: Métricas de tempo
-    -- ==========================================
     
     -- Tempo até aprovação (em horas)
     TIMESTAMP_DIFF(order_approved_at, order_purchase_timestamp, HOUR) AS hours_to_approval,
@@ -111,10 +104,9 @@ enriched AS (
       DAY
     ) AS days_in_transit,
     
-    -- ==========================================
-    -- ENRICHMENT: Flags e categorias
-    -- ==========================================
     
+    -- ENRICHMENT: Flags e categorias
+
     -- Status categorizados
     CASE 
       WHEN order_status = 'delivered' THEN 'Completed'
@@ -150,9 +142,9 @@ enriched AS (
       ELSE 'Regular'
     END AS seasonal_period,
     
-    -- ==========================================
+    
     -- ENRICHMENT: Cohort (mês de primeira compra)
-    -- ==========================================
+    
     
     DATE_TRUNC(DATE(order_purchase_timestamp), MONTH) AS order_cohort_month
 
@@ -161,9 +153,8 @@ enriched AS (
 
 SELECT * FROM enriched;
 
--- =====================================================
+
 -- ÍNDICES E PARTICIONAMENTO
--- =====================================================
 
 -- BigQuery: Recriar tabela com particionamento e clustering
 CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
@@ -172,64 +163,7 @@ CLUSTER BY customer_id, order_status, order_year_month
 AS
 SELECT * FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`;
 
--- =====================================================
--- TESTES DE QUALIDADE (Documentação)
--- =====================================================
-
-/*
--- Teste 1: Nenhum order_id deve ser nulo
-SELECT COUNT(*) AS null_order_ids
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
-WHERE order_id IS NULL;
--- Esperado: 0
-
--- Teste 2: Nenhum order_id deve estar duplicado
-SELECT 
-  order_id, 
-  COUNT(*) AS count
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
-GROUP BY order_id
-HAVING COUNT(*) > 1;
--- Esperado: 0 linhas
-
--- Teste 3: order_status deve ter valores válidos
-SELECT DISTINCT order_status
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`;
--- Esperado: delivered, shipped, canceled, unavailable, invoiced, processing
-
--- Teste 4: Pedidos entregues devem ter data de entrega
-SELECT COUNT(*) AS delivered_without_date
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
-WHERE order_status = 'delivered'
-AND order_delivered_customer_date IS NULL;
--- Esperado: ~0 (poucos casos edge)
-
--- Teste 5: Timeline deve ser válida
-SELECT COUNT(*) AS invalid_timelines
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
-WHERE is_valid_timeline = FALSE;
--- Esperado: < 1% do total
-
--- Teste 6: Delivery delay extremo (> 60 dias)
-SELECT COUNT(*) AS extreme_delays
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
-WHERE is_extreme_delivery_time = TRUE;
--- Esperado: < 1% do total
-
--- Teste 7: Distribuição por status
-SELECT 
-  order_status,
-  COUNT(*) AS count,
-  ROUND(COUNT(*) / SUM(COUNT(*)) OVER () * 100, 2) AS pct
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
-GROUP BY order_status
-ORDER BY count DESC;
--- Esperado: delivered ~97%, outros ~3%
-*/
-
--- =====================================================
 -- QUERIES DE VALIDAÇÃO
--- =====================================================
 
 -- Sumário da tabela staging
 SELECT 
@@ -273,47 +207,5 @@ SELECT
 FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
 WHERE order_status = 'delivered';
 
--- =====================================================
--- EXEMPLO DE USO
--- =====================================================
 
-/*
--- Análise de performance de entrega por período
-SELECT 
-  seasonal_period,
-  COUNT(*) AS orders,
-  AVG(days_to_delivery) AS avg_delivery_days,
-  COUNTIF(delivery_status = 'Delayed') / COUNT(*) * 100 AS delay_rate_pct
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
-WHERE order_status = 'delivered'
-GROUP BY seasonal_period
-ORDER BY orders DESC;
 
--- Análise de horários de compra
-SELECT 
-  order_period_of_day,
-  order_day_name,
-  COUNT(*) AS orders
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.stg_orders`
-WHERE order_year = 2018
-GROUP BY order_period_of_day, order_day_name
-ORDER BY orders DESC;
-*/
-
--- =====================================================
--- DOCUMENTAÇÃO
--- =====================================================
-
--- Esta tabela staging serve como base para:
--- 1. Análises de performance de entrega
--- 2. Análises de sazonalidade
--- 3. Análises de cohort
--- 4. Dashboards operacionais
--- 5. Camada intermediária para marts
-
--- Próximos passos:
--- - Criar stg_customers.sql
--- - Criar stg_order_items.sql
--- - Criar mart_customer_metrics.sql (usando estas stagings)
-
--- =====================================================

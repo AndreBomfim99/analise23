@@ -1,16 +1,11 @@
--- =====================================================
 -- VIEWS AUXILIARES - OLIST E-COMMERCE
--- =====================================================
 -- Views para facilitar análises e reduzir duplicação de queries
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
 -- 1. VW_ORDERS_COMPLETE
--- View principal com todos os dados de pedidos em um único lugar
--- =====================================================
 
+-- View principal com todos os dados de pedidos em um único lugar
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_orders_complete` AS
 SELECT 
   -- Order info
@@ -78,11 +73,9 @@ LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.payments` p
 LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.reviews` r 
   ON o.order_id = r.order_id;
 
--- =====================================================
 -- 2. VW_ORDER_ITEMS_DETAIL
--- View com detalhes completos dos itens de pedidos
--- =====================================================
 
+-- View com detalhes completos dos itens de pedidos
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_order_items_detail` AS
 SELECT 
   -- Order item info
@@ -143,11 +136,10 @@ LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.orders` o
 LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.customers` c 
   ON o.customer_id = c.customer_id;
 
--- =====================================================
--- 3. VW_CUSTOMER_SUMMARY
--- View com sumário agregado por cliente
--- =====================================================
 
+-- 3. VW_CUSTOMER_SUMMARY
+
+-- View com sumário agregado por cliente
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_customer_summary` AS
 WITH customer_orders AS (
   SELECT 
@@ -210,11 +202,9 @@ SELECT
 FROM customer_orders
 GROUP BY customer_unique_id, customer_state, customer_city;
 
--- =====================================================
 -- 4. VW_CATEGORY_SUMMARY
--- View com sumário agregado por categoria
--- =====================================================
 
+-- View com sumário agregado por categoria
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_category_summary` AS
 SELECT 
   COALESCE(pct.product_category_name_english, 'Unknown') AS category,
@@ -251,11 +241,9 @@ LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.reviews` r
 WHERE o.order_status = 'delivered'
 GROUP BY category;
 
--- =====================================================
 -- 5. VW_SELLER_PERFORMANCE
--- View com performance agregada por seller
--- =====================================================
 
+-- View com performance agregada por seller
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_seller_performance` AS
 SELECT 
   s.seller_id,
@@ -298,11 +286,9 @@ LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.reviews` r
 WHERE o.order_status = 'delivered'
 GROUP BY s.seller_id, s.seller_city, s.seller_state;
 
--- =====================================================
 -- 6. VW_MONTHLY_METRICS
--- View com métricas agregadas por mês
--- =====================================================
 
+-- View com métricas agregadas por mês
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_monthly_metrics` AS
 SELECT 
   DATE_TRUNC(o.order_purchase_timestamp, MONTH) AS month,
@@ -339,11 +325,9 @@ LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.reviews` r
 WHERE o.order_status = 'delivered'
 GROUP BY month, year, month_number, year_month;
 
--- =====================================================
 -- 7. VW_STATE_METRICS
--- View com métricas agregadas por estado
--- =====================================================
 
+-- View com métricas agregadas por estado
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_state_metrics` AS
 SELECT 
   c.customer_state,
@@ -378,11 +362,9 @@ LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.reviews` r
 WHERE o.order_status = 'delivered'
 GROUP BY c.customer_state;
 
--- =====================================================
 -- 8. VW_PAYMENT_ANALYSIS
--- View com análise de métodos de pagamento
--- =====================================================
 
+-- View com análise de métodos de pagamento
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_payment_analysis` AS
 SELECT 
   p.payment_type,
@@ -411,19 +393,3 @@ LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.reviews` r
 WHERE o.order_status = 'delivered'
 GROUP BY p.payment_type;
 
--- =====================================================
--- OBSERVAÇÕES:
--- =====================================================
--- 
--- Estas views facilitam consultas comuns e reduzem duplicação de código.
--- Use-as como base para análises mais complexas.
--- 
--- Exemplos de uso:
--- 
--- SELECT * FROM `project.dataset.vw_orders_complete` WHERE order_status = 'delivered';
--- SELECT * FROM `project.dataset.vw_customer_summary` WHERE customer_segment = 'Loyal';
--- SELECT * FROM `project.dataset.vw_category_summary` ORDER BY total_revenue DESC;
--- 
--- Para análises específicas, combine estas views com JOINs ou CTEs.
--- 
--- =====================================================

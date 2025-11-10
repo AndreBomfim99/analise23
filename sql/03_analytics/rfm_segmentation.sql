@@ -1,16 +1,10 @@
--- =====================================================
 -- RFM SEGMENTATION ANALYSIS
--- =====================================================
 -- Segmentação de clientes usando Recency, Frequency, Monetary
 -- Análise completa com scores, segmentos e recomendações
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
 -- 1. CÁLCULO BASE RFM
--- =====================================================
-
 WITH rfm_base AS (
   SELECT 
     c.customer_unique_id,
@@ -43,10 +37,8 @@ WITH rfm_base AS (
   GROUP BY c.customer_unique_id, c.customer_state
 ),
 
--- =====================================================
--- 2. CÁLCULO DE SCORES RFM (1-5)
--- =====================================================
 
+-- 2. CÁLCULO DE SCORES RFM (1-5)
 rfm_scores AS (
   SELECT 
     customer_unique_id,
@@ -82,10 +74,8 @@ rfm_scores AS (
   FROM rfm_base
 ),
 
--- =====================================================
--- 3. SEGMENTAÇÃO DE CLIENTES
--- =====================================================
 
+-- 3. SEGMENTAÇÃO DE CLIENTES
 rfm_segmented AS (
   SELECT 
     *,
@@ -160,12 +150,12 @@ rfm_segmented AS (
 SELECT * FROM rfm_segmented
 ORDER BY rfm_score_numeric DESC, monetary DESC;
 
--- =====================================================
+
 -- 4. SUMÁRIO POR SEGMENTO
--- =====================================================
+
 
 WITH rfm_segmented AS (
-  -- [Repetir CTE acima se necessário - BigQuery não permite reusar CTEs entre queries]
+  -- Repetir CTE acima se necessário pq o BigQuery não permite reusar CTEs entre queries
   SELECT 
     c.customer_unique_id,
     c.customer_state,
@@ -243,10 +233,8 @@ FROM rfm_with_segment
 GROUP BY segment
 ORDER BY total_revenue DESC;
 
--- =====================================================
--- 5. DISTRIBUIÇÃO DE SCORES
--- =====================================================
 
+-- 5. DISTRIBUIÇÃO DE SCORES
 WITH rfm_base AS (
   SELECT 
     c.customer_unique_id,
@@ -294,10 +282,8 @@ FROM rfm_base
 GROUP BY R_score, F_score, M_score
 ORDER BY R_score DESC, F_score DESC, M_score DESC;
 
--- =====================================================
--- 6. TOP CLIENTES POR SEGMENTO
--- =====================================================
 
+-- 6. TOP CLIENTES POR SEGMENTO
 WITH rfm_segmented AS (
   SELECT 
     c.customer_unique_id,
@@ -387,52 +373,3 @@ FROM rfm_with_segment
 WHERE rank_in_segment <= 10  -- Top 10 por segmento
 ORDER BY segment, monetary DESC;
 
--- =====================================================
--- INSIGHTS E RECOMENDAÇÕES POR SEGMENTO:
--- =====================================================
---
--- 🏆 CHAMPIONS (R>=4, F>=4, M>=4)
---    Ação: Programa VIP, early access, benefícios exclusivos
---    ROI: Alto - São seus melhores clientes
---
--- ⭐ LOYAL CUSTOMERS (F>=4)
---    Ação: Upsell, cross-sell, peça reviews e referrals
---    ROI: Alto - Compram frequentemente
---
--- 🚨 CANNOT LOSE THEM (R<=2, F>=4, M>=4)
---    Ação: URGENTE! Oferta especial, contato direto
---    ROI: Crítico - Clientes valiosos em risco
---
--- ⚠️ AT RISK (R<=2, F>=3, M>=3)
---    Ação: Campanha win-back, cupom 20%, pesquisa
---    ROI: Médio/Alto - Vale investir para recuperar
---
--- 📈 POTENTIAL LOYALIST (R>=4, F>=2, M>=2)
---    Ação: Programa de fidelidade, email nurturing
---    ROI: Médio - Potencial de virar Loyal
---
--- 🔔 NEED ATTENTION (R>=2, F>=2, M>=2)
---    Ação: Ofertas limitadas, lembre que sentem falta
---    ROI: Médio - Ainda engajados
---
--- 🌟 PROMISING (R>=3, F=1, M>=2)
---    Ação: Incentive 2ª compra, cupom 15%
---    ROI: Médio - Primeira compra foi boa
---
--- 👋 NEW CUSTOMERS (R>=4, F=1)
---    Ação: Onboarding, sequência de boas-vindas
---    ROI: Médio - Construir relacionamento
---
--- 😴 ABOUT TO SLEEP (R>=2, F<=2, M<=2)
---    Ação: Email re-engajamento, novidades
---    ROI: Baixo/Médio - Últimas tentativas
---
--- 💤 HIBERNATING (R<=2, F<=2, M<=2)
---    Ação: Reativação massiva ou parar de investir
---    ROI: Baixo - Custo pode não compensar
---
--- ❌ LOST (R=1)
---    Ação: Considere não investir recursos
---    ROI: Muito baixo - Custo alto para recuperar
---
--- =====================================================

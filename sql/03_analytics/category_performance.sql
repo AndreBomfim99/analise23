@@ -1,15 +1,10 @@
--- =====================================================
 -- PRODUCT CATEGORY PERFORMANCE ANALYSIS
--- =====================================================
 -- Análise completa de performance por categoria de produto
 -- Revenue, NPS, AOV, Sazonalidade e Margem
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
 -- 1. PERFORMANCE GERAL POR CATEGORIA
--- =====================================================
 
 WITH category_metrics AS (
   SELECT 
@@ -71,10 +66,8 @@ SELECT
 FROM category_metrics
 ORDER BY total_revenue DESC;
 
--- =====================================================
--- 2. TOP 10 CATEGORIAS POR RECEITA
--- =====================================================
 
+-- 2. TOP 10 CATEGORIAS POR RECEITA
 WITH category_revenue AS (
   SELECT 
     COALESCE(pct.product_category_name_english, 'Unknown') AS category,
@@ -117,10 +110,8 @@ FROM category_revenue
 ORDER BY total_revenue DESC
 LIMIT 10;
 
--- =====================================================
--- 3. ANÁLISE DE SAZONALIDADE (Mensal)
--- =====================================================
 
+-- 3. ANÁLISE DE SAZONALIDADE (Mensal)
 WITH monthly_category AS (
   SELECT 
     DATE_TRUNC(o.order_purchase_timestamp, MONTH) AS month,
@@ -167,10 +158,8 @@ FROM monthly_category mc
 INNER JOIN top_categories tc ON mc.category = tc.category
 ORDER BY mc.month DESC, mc.revenue DESC;
 
--- =====================================================
--- 4. ANÁLISE DE TICKET MÉDIO POR CATEGORIA
--- =====================================================
 
+-- 4. ANÁLISE DE TICKET MÉDIO POR CATEGORIA
 WITH category_aov AS (
   SELECT 
     COALESCE(pct.product_category_name_english, 'Unknown') AS category,
@@ -209,10 +198,8 @@ FROM category_aov
 GROUP BY category
 ORDER BY avg_order_value DESC;
 
--- =====================================================
--- 5. ANÁLISE DE NPS POR CATEGORIA
--- =====================================================
 
+-- 5. ANÁLISE DE NPS POR CATEGORIA
 WITH category_nps AS (
   SELECT 
     COALESCE(pct.product_category_name_english, 'Unknown') AS category,
@@ -260,13 +247,11 @@ SELECT
 
 FROM category_nps
 GROUP BY category
-HAVING SUM(review_count) >= 10  -- Mínimo de 10 reviews
+HAVING SUM(review_count) >= 10  -- minimo de 10 reviews
 ORDER BY avg_nps DESC;
 
--- =====================================================
--- 6. MARGEM ESTIMADA POR CATEGORIA (Frete vs Preço)
--- =====================================================
 
+-- 6. MARGEM ESTIMADA POR CATEGORIA (Frete vs Preço)
 WITH category_margin AS (
   SELECT 
     COALESCE(pct.product_category_name_english, 'Unknown') AS category,
@@ -315,10 +300,8 @@ SELECT
 FROM category_margin
 ORDER BY estimated_margin DESC;
 
--- =====================================================
--- 7. ANÁLISE DE CROSS-SELL (Categorias Compradas Juntas)
--- =====================================================
 
+-- 7. ANÁLISE DE CROSS-SELL (Categorias Compradas Juntas)
 WITH order_categories AS (
   SELECT 
     o.order_id,
@@ -361,14 +344,12 @@ SELECT
   ) AS co_occurrence_pct
 
 FROM category_pairs
-WHERE co_occurrence_count >= 10  -- Mínimo de 10 co-ocorrências
+WHERE co_occurrence_count >= 10  -- Minimo de 10 co-ocorrências
 ORDER BY co_occurrence_count DESC
 LIMIT 20;
 
--- =====================================================
--- 8. RANKING GERAL DE CATEGORIAS (Score Composto)
--- =====================================================
 
+-- 8. RANKING GERAL DE CATEGORIAS (Score Composto)
 WITH category_metrics AS (
   SELECT 
     COALESCE(pct.product_category_name_english, 'Unknown') AS category,
@@ -438,28 +419,3 @@ SELECT
 FROM normalized_metrics
 ORDER BY composite_score DESC;
 
--- =====================================================
--- INSIGHTS E RECOMENDAÇÕES:
--- =====================================================
---
--- 1. CATEGORIAS ESTRELA (High Revenue + High NPS):
---    - Expandir catálogo
---    - Aumentar marketing
---    - Garantir disponibilidade de estoque
---
--- 2. CATEGORIAS EM RISCO (High Revenue + Low NPS):
---    - Investigar problemas de qualidade/logística
---    - Melhorar descrição de produtos
---    - Review process dos sellers
---
--- 3. CATEGORIAS OPORTUNIDADE (Low Revenue + High NPS):
---    - Aumentar mix de produtos
---    - Investir em marketing
---    - Potencial de crescimento alto
---
--- 4. CATEGORIAS A DESCONTINUAR (Low Revenue + Low NPS):
---    - Considerar reduzir SKUs
---    - Focar recursos em outras categorias
---    - ROI baixo
---
--- =====================================================

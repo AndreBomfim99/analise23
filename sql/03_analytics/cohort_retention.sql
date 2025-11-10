@@ -1,15 +1,10 @@
--- =====================================================
 -- COHORT RETENTION ANALYSIS
--- =====================================================
 -- Análise avançada de retenção de clientes usando cohorts
 -- Window Functions complexas e análise temporal
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
 -- 1. COHORT BASE (Primeira Compra)
--- =====================================================
 
 WITH first_purchase AS (
   SELECT 
@@ -25,10 +20,7 @@ WITH first_purchase AS (
   GROUP BY c.customer_unique_id, c.customer_state
 ),
 
--- =====================================================
 -- 2. TODAS AS COMPRAS COM COHORT
--- =====================================================
-
 all_purchases AS (
   SELECT 
     c.customer_unique_id,
@@ -48,10 +40,7 @@ all_purchases AS (
   WHERE o.order_status = 'delivered'
 ),
 
--- =====================================================
 -- 3. CÁLCULO DE MESES DESDE COHORT
--- =====================================================
-
 cohort_data AS (
   SELECT 
     customer_unique_id,
@@ -66,10 +55,8 @@ cohort_data AS (
   FROM all_purchases
 ),
 
--- =====================================================
--- 4. MATRIZ DE RETENÇÃO (Retention Matrix)
--- =====================================================
 
+-- 4. MATRIZ DE RETENÇÃO (Retention Matrix)
 retention_matrix AS (
   SELECT 
     cohort_month,
@@ -94,10 +81,8 @@ cohort_sizes AS (
   GROUP BY cohort_month
 ),
 
--- =====================================================
--- 5. TAXA DE RETENÇÃO CALCULADA
--- =====================================================
 
+-- 5. TAXA DE RETENÇÃO CALCULADA
 retention_rates AS (
   SELECT 
     rm.cohort_month,
@@ -127,10 +112,7 @@ retention_rates AS (
 SELECT * FROM retention_rates
 ORDER BY cohort_month, months_since_first_purchase;
 
--- =====================================================
 -- 6. PIVOT TABLE - VISUALIZAÇÃO CLÁSSICA DE COHORT
--- =====================================================
-
 WITH retention_pivot AS (
   SELECT 
     cohort_month,
@@ -160,10 +142,8 @@ SELECT
 FROM retention_pivot
 ORDER BY cohort_month DESC;
 
--- =====================================================
--- 7. ANÁLISE DE CHURN (Complemento da Retenção)
--- =====================================================
 
+-- 7. ANÁLISE DE CHURN (Complemento da Retenção)
 WITH churn_analysis AS (
   SELECT 
     cohort_month,
@@ -193,10 +173,8 @@ FROM churn_analysis
 WHERE months_since_first_purchase <= 12
 ORDER BY cohort_month DESC, months_since_first_purchase;
 
--- =====================================================
--- 8. MÉTRICAS AGREGADAS POR COHORT
--- =====================================================
 
+-- 8. MÉTRICAS AGREGADAS POR COHORT
 WITH cohort_summary AS (
   SELECT 
     cohort_month,
@@ -233,18 +211,16 @@ SELECT
   
   -- Qualidade do cohort
   CASE 
-    WHEN m1_retention > 5 AND m6_retention > 2 THEN '🟢 Excelente'
-    WHEN m1_retention > 3 AND m6_retention > 1 THEN '🟡 Bom'
-    ELSE '🔴 Baixo'
+    WHEN m1_retention > 5 AND m6_retention > 2 THEN ' Excelente'
+    WHEN m1_retention > 3 AND m6_retention > 1 THEN ' Bom'
+    ELSE ' Baixo'
   END AS cohort_quality
 
 FROM cohort_summary
 ORDER BY cohort_month DESC;
 
--- =====================================================
--- 9. RETENÇÃO POR ESTADO (Análise Geográfica)
--- =====================================================
 
+-- 9. RETENÇÃO POR ESTADO (Análise Geográfica)
 WITH state_retention AS (
   SELECT 
     customer_state,
@@ -275,9 +251,9 @@ FROM state_retention
 WHERE months_since_first_purchase BETWEEN 0 AND 6
 ORDER BY customer_state, months_since_first_purchase;
 
--- =====================================================
+
 -- 10. CURVA DE RETENÇÃO MÉDIA (Benchmark)
--- =====================================================
+
 
 WITH avg_retention_curve AS (
   SELECT 
@@ -305,30 +281,12 @@ SELECT
   
   -- Interpretação
   CASE 
-    WHEN months_since_first_purchase = 0 THEN '📊 Baseline (100%)'
-    WHEN months_since_first_purchase = 1 THEN '🔴 Crítico - Maior churn'
-    WHEN months_since_first_purchase BETWEEN 2 AND 3 THEN '🟡 Estabilização'
-    WHEN months_since_first_purchase >= 4 THEN '🟢 Clientes Fidelizados'
+    WHEN months_since_first_purchase = 0 THEN 'Baseline (100%)'
+    WHEN months_since_first_purchase = 1 THEN 'Crítico - Maior churn'
+    WHEN months_since_first_purchase BETWEEN 2 AND 3 THEN 'Estabilização'
+    WHEN months_since_first_purchase >= 4 THEN 'Clientes Fidelizados'
   END AS phase
 
 FROM avg_retention_curve
 ORDER BY months_since_first_purchase;
 
--- =====================================================
--- INSIGHTS E OBSERVAÇÕES:
--- =====================================================
--- 
--- 1. M0 → M1: Maior drop-off (normalmente 90-95% churn)
--- 2. M1 → M3: Estabilização gradual
--- 3. M3+: Clientes que passam de M3 tendem a ser leais
--- 4. Meta ideal: M1 > 8%, M3 > 5%, M6 > 3%
--- 5. Cohorts recentes tendem a ter retenção melhor (melhoria contínua)
--- 
--- AÇÕES RECOMENDADAS:
--- - Email marketing agressivo em D+7 e D+30
--- - Cupom de segunda compra (15% off até D+30)
--- - Programa de fidelidade kickoff em M2
--- - Win-back campaign para clientes inativos M3-M6
--- - Análise de NPS correlation com retenção
--- 
--- =====================================================

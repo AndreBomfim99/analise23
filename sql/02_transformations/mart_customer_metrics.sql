@@ -1,16 +1,12 @@
--- =====================================================
 -- MART: CUSTOMER METRICS
--- =====================================================
 -- Camada analytics - Métricas consolidadas por cliente
 -- Combina staging de customers + orders + payments + reviews
 -- Estilo dbt - staging → marts
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
 -- MART_CUSTOMER_METRICS: Visão 360 do cliente
--- =====================================================
+
 
 CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics` AS
 
@@ -34,9 +30,9 @@ order_facts AS (
   SELECT 
     c.customer_unique_id,
     
-    -- ==========================================
+    
     -- MÉTRICAS DE PEDIDOS
-    -- ==========================================
+    
     
     COUNT(DISTINCT o.order_id) AS total_orders,
     COUNT(DISTINCT CASE WHEN o.order_status = 'delivered' THEN o.order_id END) AS delivered_orders,
@@ -48,9 +44,9 @@ order_facts AS (
       COUNT(DISTINCT o.order_id)
     ) * 100 AS cancel_rate_pct,
     
-    -- ==========================================
+    
     -- MÉTRICAS TEMPORAIS
-    -- ==========================================
+    
     
     MIN(o.order_purchase_timestamp) AS first_order_date,
     MAX(o.order_purchase_timestamp) AS last_order_date,
@@ -69,9 +65,9 @@ order_facts AS (
     DATE_TRUNC(DATE(MIN(o.order_purchase_timestamp)), MONTH) AS cohort_month,
     FORMAT_DATE('%Y-%m', MIN(o.order_purchase_timestamp)) AS cohort_year_month,
     
-    -- ==========================================
+    
     -- MÉTRICAS DE FREQUÊNCIA
-    -- ==========================================
+    
     
     -- Frequência (pedidos por dia ativo)
     SAFE_DIVIDE(
@@ -93,9 +89,9 @@ order_facts AS (
       NULLIF(COUNT(DISTINCT o.order_id) - 1, 0)
     ) AS avg_days_between_orders,
     
-    -- ==========================================
+    
     -- MÉTRICAS DE ENTREGA
-    -- ==========================================
+    
     
     AVG(o.days_to_delivery) AS avg_delivery_days,
     AVG(o.delivery_delay_days) AS avg_delivery_delay,
@@ -106,9 +102,9 @@ order_facts AS (
       COUNT(*)
     ) * 100 AS delivery_delay_rate_pct,
     
-    -- ==========================================
+    
     -- MÉTRICAS DE SATISFAÇÃO
-    -- ==========================================
+    
     
     COUNT(DISTINCT r.review_id) AS total_reviews,
     AVG(r.review_score) AS avg_review_score,
@@ -124,9 +120,8 @@ order_facts AS (
       COUNT(DISTINCT r.review_id)
     ) * 100 AS positive_review_rate_pct,
     
-    -- ==========================================
+    
     -- MÉTRICAS DE SAZONALIDADE
-    -- ==========================================
     
     -- Pedidos em período sazonal
     COUNTIF(o.seasonal_period = 'Black Friday / Natal') AS orders_black_friday,
@@ -148,10 +143,7 @@ payment_facts AS (
   SELECT 
     c.customer_unique_id,
     
-    -- ==========================================
     -- MÉTRICAS MONETÁRIAS
-    -- ==========================================
-    
     SUM(p.payment_value) AS lifetime_value,
     AVG(p.payment_value) AS avg_order_value,
     MIN(p.payment_value) AS min_order_value,
@@ -163,9 +155,8 @@ payment_facts AS (
     APPROX_QUANTILES(p.payment_value, 4)[OFFSET(2)] AS median_order_value,
     APPROX_QUANTILES(p.payment_value, 4)[OFFSET(3)] AS p75_order_value,
     
-    -- ==========================================
+    
     -- MÉTRICAS DE PAGAMENTO
-    -- ==========================================
     
     -- Método de pagamento preferido
     MODE(p.payment_type) AS preferred_payment_method,
@@ -197,10 +188,8 @@ payment_facts AS (
 
 final AS (
   SELECT 
-    -- ==========================================
-    -- DIMENSÕES DO CLIENTE
-    -- ==========================================
     
+    -- DIMENSÕES DO CLIENTE
     cb.customer_unique_id,
     cb.customer_state,
     cb.customer_city,
@@ -210,19 +199,15 @@ final AS (
     cb.state_gdp_tier,
     cb.distance_from_sp,
     
-    -- ==========================================
-    -- MÉTRICAS DE PEDIDOS
-    -- ==========================================
     
+    -- MÉTRICAS DE PEDIDOS
     of.total_orders,
     of.delivered_orders,
     of.canceled_orders,
     ROUND(of.cancel_rate_pct, 2) AS cancel_rate_pct,
     
-    -- ==========================================
-    -- MÉTRICAS TEMPORAIS
-    -- ==========================================
     
+    -- MÉTRICAS TEMPORAIS
     of.first_order_date,
     of.last_order_date,
     of.recency_days,
@@ -232,43 +217,34 @@ final AS (
     ROUND(of.orders_per_day, 4) AS orders_per_day,
     ROUND(of.avg_days_between_orders, 1) AS avg_days_between_orders,
     
-    -- ==========================================
-    -- MÉTRICAS MONETÁRIAS
-    -- ==========================================
     
+    -- MÉTRICAS MONETÁRIAS
     ROUND(pf.lifetime_value, 2) AS lifetime_value,
     ROUND(pf.avg_order_value, 2) AS avg_order_value,
     ROUND(pf.min_order_value, 2) AS min_order_value,
     ROUND(pf.max_order_value, 2) AS max_order_value,
     ROUND(pf.median_order_value, 2) AS median_order_value,
     
-    -- ==========================================
-    -- MÉTRICAS DE SATISFAÇÃO
-    -- ==========================================
     
+    -- MÉTRICAS DE SATISFAÇÃO
     of.total_reviews,
     ROUND(of.avg_review_score, 2) AS avg_review_score,
     ROUND(of.positive_review_rate_pct, 2) AS positive_review_rate_pct,
     
-    -- ==========================================
-    -- MÉTRICAS DE ENTREGA
-    -- ==========================================
     
+    -- MÉTRICAS DE ENTREGA
     ROUND(of.avg_delivery_days, 1) AS avg_delivery_days,
     ROUND(of.avg_delivery_delay, 1) AS avg_delivery_delay,
     ROUND(of.delivery_delay_rate_pct, 2) AS delivery_delay_rate_pct,
     
-    -- ==========================================
-    -- MÉTRICAS DE PAGAMENTO
-    -- ==========================================
     
+    -- MÉTRICAS DE PAGAMENTO
     pf.preferred_payment_method,
     ROUND(pf.avg_installments, 1) AS avg_installments,
     ROUND(pf.credit_card_usage_pct, 2) AS credit_card_usage_pct,
     
-    -- ==========================================
+    
     -- SEGMENTAÇÕES
-    -- ==========================================
     
     -- Segmento por número de pedidos
     CASE 
@@ -313,10 +289,8 @@ final AS (
     
     NTILE(5) OVER (ORDER BY pf.lifetime_value) AS M_score,
     
-    -- ==========================================
-    -- STATUS DO CLIENTE
-    -- ==========================================
     
+    -- STATUS DO CLIENTE
     CASE 
       WHEN of.recency_days <= 90 AND of.avg_review_score >= 4 THEN 'Healthy'
       WHEN of.recency_days <= 90 AND of.avg_review_score < 4 THEN 'Active but Unsatisfied'
@@ -324,10 +298,8 @@ final AS (
       WHEN of.recency_days > 180 THEN 'Inactive'
     END AS customer_health_status,
     
-    -- ==========================================
-    -- FLAGS
-    -- ==========================================
     
+    -- FLAGS
     CASE WHEN of.avg_review_score >= 4.5 THEN TRUE ELSE FALSE END AS is_promoter,
     CASE WHEN of.avg_review_score <= 2.5 THEN TRUE ELSE FALSE END AS is_detractor,
     CASE WHEN of.delivery_delay_rate_pct > 50 THEN TRUE ELSE FALSE END AS has_delivery_issues,
@@ -335,9 +307,8 @@ final AS (
     CASE WHEN pf.lifetime_value > 1000 THEN TRUE ELSE FALSE END AS is_vip,
     CASE WHEN of.total_orders >= 3 THEN TRUE ELSE FALSE END AS is_repeat_customer,
     
-    -- ==========================================
+    
     -- MÉTRICAS CALCULADAS AVANÇADAS
-    -- ==========================================
     
     -- CLV projetado (simples: LTV * multiplicador baseado em frequência)
     ROUND(
@@ -366,9 +337,7 @@ final AS (
 
 SELECT * FROM final;
 
--- =====================================================
 -- ÍNDICES E PARTICIONAMENTO
--- =====================================================
 
 -- Recriar com clustering
 CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics`
@@ -376,9 +345,8 @@ CLUSTER BY customer_state, frequency_segment, ltv_segment, recency_segment
 AS
 SELECT * FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics`;
 
--- =====================================================
+
 -- VIEWS DERIVADAS
--- =====================================================
 
 -- View: Top Customers (Champions)
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_top_customers` AS
@@ -404,41 +372,8 @@ WHERE recency_segment = 'Lost'
   AND lifetime_value > 200
 ORDER BY last_order_date DESC;
 
--- =====================================================
--- TESTES DE QUALIDADE
--- =====================================================
 
-/*
--- Teste 1: Todos os clientes devem ter pelo menos 1 pedido
-SELECT COUNT(*) 
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics`
-WHERE total_orders < 1;
--- Esperado: 0
-
--- Teste 2: LTV deve ser positivo
-SELECT COUNT(*) 
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics`
-WHERE lifetime_value <= 0;
--- Esperado: 0
-
--- Teste 3: Recency não pode ser negativa
-SELECT COUNT(*) 
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics`
-WHERE recency_days < 0;
--- Esperado: 0
-
--- Teste 4: Scores RFM devem estar entre 1 e 5
-SELECT COUNT(*) 
-FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics`
-WHERE R_score NOT BETWEEN 1 AND 5
-   OR F_score NOT BETWEEN 1 AND 5
-   OR M_score NOT BETWEEN 1 AND 5;
--- Esperado: 0
-*/
-
--- =====================================================
 -- QUERIES DE ANÁLISE
--- =====================================================
 
 -- Sumário geral
 SELECT 
@@ -475,20 +410,3 @@ FROM `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.mart_customer_metrics`
 ORDER BY lifetime_value DESC
 LIMIT 100;
 
--- =====================================================
--- DOCUMENTAÇÃO
--- =====================================================
-
--- Esta mart consolida todas as métricas de cliente em um único lugar.
--- Use para:
--- 1. Dashboards executivos (Customer 360)
--- 2. Análises de segmentação (RFM)
--- 3. Modelos de ML (churn prediction, CLV)
--- 4. Campanhas de marketing (targeting)
--- 5. Análises de cohort
-
--- Grão: 1 linha por customer_unique_id
--- Atualização sugerida: Diária
--- Dependências: stg_customers_master, stg_orders, payments, reviews
-
--- =====================================================

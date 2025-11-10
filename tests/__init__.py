@@ -1,8 +1,6 @@
 """
 Tests Package - Olist E-Commerce Analysis
-------------------------------------------
 Configurações e fixtures compartilhadas para todos os testes.
-
 Autor: Andre Bomfim
 Data: Outubro 2025
 """
@@ -25,10 +23,7 @@ sys.path.insert(0, str(ROOT_DIR))
 load_dotenv()
 
 
-# ============================================
 # FIXTURES GLOBAIS - CONFIGURAÇÃO
-# ============================================
-
 @pytest.fixture(scope="session")
 def project_id():
     """Fixture: GCP Project ID"""
@@ -75,10 +70,8 @@ def bigquery_client(project_id):
         pytest.skip(f"BigQuery client não disponível: {e}")
 
 
-# ============================================
-# FIXTURES - SAMPLE DATA
-# ============================================
 
+# FIXTURES - SAMPLE DATA
 @pytest.fixture(scope="session")
 def sample_customers_df():
     """Fixture: DataFrame de exemplo de customers"""
@@ -208,10 +201,8 @@ def sample_rfm_df():
     })
 
 
-# ============================================
-# HELPER FUNCTIONS - ASSERTIONS
-# ============================================
 
+# HELPER FUNCTIONS - ASSERTIONS
 def assert_dataframe_not_empty(df: pd.DataFrame, name: str = "DataFrame"):
     """
     Helper: Verifica se DataFrame não está vazio
@@ -326,10 +317,8 @@ def assert_date_order(df: pd.DataFrame, date_col1: str, date_col2: str,
     assert invalid == 0, msg
 
 
-# ============================================
-# HELPER FUNCTIONS - DATA GENERATION
-# ============================================
 
+# HELPER FUNCTIONS - DATA GENERATION
 def create_test_csv(path: Path, df: pd.DataFrame):
     """
     Helper: Cria arquivo CSV de teste
@@ -396,10 +385,8 @@ def generate_random_orders(n: int = 200, customer_ids: list = None) -> pd.DataFr
     })
 
 
-# ============================================
-# CONFIGURATION
-# ============================================
 
+# CONFIGURATION
 def pytest_configure(config):
     """Configuração customizada do pytest"""
     config.addinivalue_line(
@@ -420,10 +407,8 @@ def pytest_configure(config):
     )
 
 
-# ============================================
-# PYTEST HOOKS (OPCIONAL)
-# ============================================
 
+# PYTEST HOOKS (OPCIONAL)
 def pytest_collection_modifyitems(config, items):
     """
     Hook: Modifica items coletados

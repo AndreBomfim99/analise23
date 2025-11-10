@@ -1,16 +1,11 @@
--- =====================================================
 -- DELIVERY & LOGISTICS ANALYSIS
--- =====================================================
 -- Análise completa de performance de entrega e logística
 -- SLA, atrasos, correlação com NPS, rotas críticas
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
 
--- =====================================================
+
 -- 1. PERFORMANCE GERAL DE ENTREGA
--- =====================================================
-
 WITH delivery_metrics AS (
   SELECT 
     COUNT(DISTINCT order_id) AS total_orders,
@@ -53,10 +48,8 @@ SELECT
   slowest_delivery
 FROM delivery_metrics;
 
--- =====================================================
--- 2. PERFORMANCE POR ROTA (Estado Seller → Cliente)
--- =====================================================
 
+-- 2. PERFORMANCE POR ROTA (Estado Seller → Cliente)
 WITH route_performance AS (
   SELECT 
     oi.seller_state,
@@ -115,19 +108,19 @@ SELECT
   
   -- Classificação de performance
   CASE 
-    WHEN sla_compliance_pct >= 90 AND avg_review_score >= 4.0 THEN '🟢 Excelente'
-    WHEN sla_compliance_pct >= 75 AND avg_review_score >= 3.5 THEN '🟡 Bom'
-    WHEN sla_compliance_pct >= 60 THEN '🟠 Precisa Melhorar'
-    ELSE '🔴 Crítico'
+    WHEN sla_compliance_pct >= 90 AND avg_review_score >= 4.0 THEN ' Excelente'
+    WHEN sla_compliance_pct >= 75 AND avg_review_score >= 3.5 THEN ' Bom'
+    WHEN sla_compliance_pct >= 60 THEN 'Precisa Melhorar'
+    ELSE 'Crítico'
   END AS route_performance_status
 
 FROM route_performance
 WHERE total_orders >= 10  -- Mínimo de volume para análise
 ORDER BY total_orders DESC;
 
--- =====================================================
+
 -- 3. ANÁLISE DE ATRASO POR REGIÃO
--- =====================================================
+
 
 WITH regional_delays AS (
   SELECT 
@@ -188,9 +181,9 @@ SELECT
 FROM regional_delays
 ORDER BY orders DESC;
 
--- =====================================================
+
 -- 4. CORRELAÇÃO: TEMPO DE ENTREGA vs NPS
--- =====================================================
+
 
 WITH delivery_nps_correlation AS (
   SELECT 
@@ -251,9 +244,8 @@ ORDER BY
     ELSE 5
   END;
 
--- =====================================================
+
 -- 5. ANÁLISE DE ATRASO vs NPS (Detalhado)
--- =====================================================
 
 WITH delay_impact AS (
   SELECT 
@@ -301,10 +293,8 @@ SELECT
 FROM delay_impact
 ORDER BY avg_nps DESC;
 
--- =====================================================
--- 6. TOP 20 ROTAS CRÍTICAS (Maior Volume + Pior SLA)
--- =====================================================
 
+-- 6. TOP 20 ROTAS CRÍTICAS (Maior Volume + Pior SLA)
 WITH critical_routes AS (
   SELECT 
     oi.seller_state,
@@ -357,19 +347,19 @@ SELECT
   
   -- Priority level
   CASE 
-    WHEN sla_pct < 60 AND avg_nps < 3.5 THEN '🔴 P0 - Urgente'
-    WHEN sla_pct < 70 AND avg_nps < 4.0 THEN '🟠 P1 - Alta'
-    WHEN sla_pct < 80 THEN '🟡 P2 - Média'
-    ELSE '🟢 P3 - Baixa'
+    WHEN sla_pct < 60 AND avg_nps < 3.5 THEN ' P0 - Urgente'
+    WHEN sla_pct < 70 AND avg_nps < 4.0 THEN ' P1 - Alta'
+    WHEN sla_pct < 80 THEN ' P2 - Média'
+    ELSE ' P3 - Baixa'
   END AS priority
 
 FROM critical_routes
 ORDER BY criticality_score DESC
 LIMIT 20;
 
--- =====================================================
+
 -- 7. ANÁLISE TEMPORAL (Evolução Mensal de SLA)
--- =====================================================
+
 
 WITH monthly_sla AS (
   SELECT 
@@ -415,9 +405,8 @@ SELECT
 FROM monthly_sla
 ORDER BY order_year_month;
 
--- =====================================================
+
 -- 8. ANÁLISE DE PESO vs TEMPO DE ENTREGA
--- =====================================================
 
 SELECT 
   oi.weight_tier,
@@ -446,34 +435,3 @@ WHERE o.order_status = 'delivered'
 GROUP BY oi.weight_tier
 ORDER BY avg_weight_g;
 
--- =====================================================
--- INSIGHTS E RECOMENDAÇÕES:
--- =====================================================
---
--- 1. ROTAS CRÍTICAS:
---    - Identificar rotas com alto volume + baixo SLA
---    - Priorizar melhorias em rotas SP → Norte/Nordeste
---    - Considerar parcerias regionais para rotas problemáticas
---
--- 2. IMPACTO NO NPS:
---    - Atraso de 1 semana = -0.5 pontos no NPS
---    - Atraso >15 dias = -1.5 pontos no NPS (crítico!)
---    - Entregas em até 7 dias = +0.8 pontos no NPS
---
--- 3. SAZONALIDADE:
---    - Black Friday/Natal: SLA cai 15-20%
---    - Planejar capacidade logística com antecedência
---    - Comunicação proativa sobre prazos em períodos de pico
---
--- 4. PESO vs ENTREGA:
---    - Produtos pesados (>5kg) têm +30% de atraso
---    - Considerar serviço especializado para itens pesados
---    - Ajustar expectativas de prazo no checkout
---
--- 5. AÇÕES IMEDIATAS:
---    - Implementar tracking em tempo real
---    - SLA diferenciado por região (transparência)
---    - Compensação automática para atrasos >20 dias
---    - Parceria com transportadoras regionais
---
--- =====================================================

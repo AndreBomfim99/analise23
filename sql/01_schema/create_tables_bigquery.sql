@@ -1,11 +1,9 @@
--- =====================================================
 -- OLIST E-COMMERCE - BIGQUERY SCHEMA
--- =====================================================
 -- Criação das tabelas no BigQuery
 -- Dataset: olist_ecommerce
 -- Autor: Andre Bomfim
 -- Data: Outubro 2025
--- =====================================================
+
 
 -- 1. CUSTOMERS
 CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.customers` (
@@ -135,27 +133,7 @@ OPTIONS(
   labels=[("domain", "product"), ("type", "reference")]
 );
 
--- 9. GEOLOCATION (opcional - muito grande)
--- Comentado por padrão - descomente se necessário
-/*
-CREATE OR REPLACE TABLE `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.geolocation` (
-  geolocation_zip_code_prefix STRING NOT NULL,
-  geolocation_lat FLOAT64,
-  geolocation_lng FLOAT64,
-  geolocation_city STRING,
-  geolocation_state STRING,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
-)
-CLUSTER BY geolocation_state, geolocation_city
-OPTIONS(
-  description="Dados de geolocalização por CEP",
-  labels=[("domain", "geolocation"), ("source", "olist")]
-);
-*/
-
--- =====================================================
 -- VIEWS AUXILIARES
--- =====================================================
 
 -- View: Pedidos completos (JOIN principal)
 CREATE OR REPLACE VIEW `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.vw_orders_complete` AS
@@ -229,18 +207,3 @@ LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.product_category_translation` pct
 LEFT JOIN `${GCP_PROJECT_ID}.${GCP_DATASET_ID}.sellers` s 
   ON oi.seller_id = s.seller_id;
 
--- =====================================================
--- ÍNDICES E CONSTRAINTS (Documentação - BigQuery não usa)
--- =====================================================
-
--- BigQuery usa PARTITION e CLUSTER ao invés de índices tradicionais
--- Já aplicados nas definições CREATE TABLE acima
-
--- Primary Keys (lógicas - para documentação):
--- customers: customer_id
--- orders: order_id
--- order_items: (order_id, order_item_id)
--- products: product_id
--- sellers: seller_id
--- payments: (order_id, payment_sequential)
--- reviews: review_id
